@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "blazedb",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Mikedan37/BlazeDB.git",
+      "state" : {
+        "revision" : "57835a5ffd4442848811bd20ea666cec877dfa16",
+        "version" : "0.1.3"
+      }
+    }
+  ],
+  "version" : 2
+}
