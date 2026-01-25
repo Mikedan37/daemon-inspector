@@ -257,8 +257,18 @@ Try the stub:
 daemon-inspector explain com.apple.Finder
 ```
 
+## Project Stewardship
+
+This project is developed and maintained by **Danylchuk Studios LLC**.
+
+The goal is to produce durable, low-level tools that prioritize correctness, transparency, and developer trust over dashboards or automation.
+
 ## Links
 
-- [Documentation](https://mikedan37.github.io/daemon-inspector1/)
+- [Documentation](https://mikedan37.github.io/daemon-inspector/)
 - [GitHub](https://github.com/Mikedan37/daemon-inspector1)
 - [Homebrew Tap](https://github.com/Mikedan37/homebrew-daemon-inspector)
+
+---
+
+Developed and maintained by Danylchuk Studios LLC (Michael Danylchuk).

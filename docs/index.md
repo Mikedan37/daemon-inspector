@@ -108,6 +108,8 @@ Free remains complete and useful indefinitely. Pro is additive.
 
 If you want updates on daemon-inspector Pro, watch this repository or check back here.
 
+For more information: [danylchukstudios.com](https://danylchukstudios.com)
+
 ---
 
 ## Design principles
@@ -120,8 +122,18 @@ If you want updates on daemon-inspector Pro, watch this repository or check back
 
 ---
 
+## Stewardship
+
+daemon-inspector is developed and maintained by **Danylchuk Studios LLC**.
+
+Danylchuk Studios focuses on building low-level, developer-first tools for system introspection, debugging, and forensic analysis. All tools are designed to be honest, local-first, and respectful of system boundaries.
+
+---
+
 ## Source
 
 [GitHub: Mikedan37/daemon-inspector1](https://github.com/Mikedan37/daemon-inspector1)
+
+Developed and maintained by Danylchuk Studios LLC (Michael Danylchuk).
 
 MIT License
