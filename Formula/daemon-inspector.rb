@@ -10,11 +10,11 @@
 
 class DaemonInspector < Formula
   desc "Read-only forensic tool for macOS daemon behavior"
-  homepage "https://github.com/Mikedan37/daemon-background-task-introspection"
-  url "https://github.com/Mikedan37/daemon-background-task-introspection/archive/refs/tags/v1.2.0.tar.gz"
-  sha256 "PLACEHOLDER_SHA256"
+  homepage "https://github.com/Mikedan37/daemon-inspector1"
+  url "https://github.com/Mikedan37/daemon-inspector1/archive/refs/tags/v1.2.0.tar.gz"
+  sha256 "ec957c6661894240e4a9612b0adbe5ef3882371b954f9c71befa73b69525fc7a"
   license "MIT"
-  head "https://github.com/Mikedan37/daemon-background-task-introspection.git", branch: "main"
+  head "https://github.com/Mikedan37/daemon-inspector1.git", branch: "main"
 
   depends_on xcode: ["15.0", :build]
   depends_on :macos

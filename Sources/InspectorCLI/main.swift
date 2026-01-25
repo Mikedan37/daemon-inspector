@@ -132,6 +132,9 @@ struct DaemonInspector {
             // Binary inspection (v1.2)
             case "inspect":
                 try runInspect(args: options.remainingArgs, options: options)
+            // Pro stub (v1.3)
+            case "explain":
+                runExplainStub(args: options.remainingArgs)
             // Internal commands
             case "test-derive":
                 EventDeriverTests.runDemo()
@@ -169,6 +172,9 @@ struct DaemonInspector {
         print("")
         print("Binary inspection (read-only):")
         print("  inspect binary <label>            Inspect binary metadata")
+        print("")
+        print("Pro (planned):")
+        print("  explain <label>                   Narrative summary (Pro)")
         print("")
         print("Change-first commands:")
         print("  changed                           Show all daemons with derived events")
@@ -1547,6 +1553,17 @@ struct DaemonInspector {
             
             outputWithHeader(lines: lines, options: options, snapshotCount: snapshots.count, observationWindow: duration)
         }
+    }
+    
+    // MARK: - Pro Stub (v1.3)
+    
+    private static func runExplainStub(args: [String]) {
+        print("This command is part of daemon-inspector Pro.")
+        print("It provides narrative summaries derived from existing events.")
+        print("No system state is modified.")
+        print("")
+        print("Learn more at: https://mikedan37.github.io/daemon-inspector1/")
+        exit(0)
     }
     
     // MARK: - Binary Inspection (v1.2)

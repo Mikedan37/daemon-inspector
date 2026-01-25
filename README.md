@@ -239,3 +239,26 @@ Most observability tools collapse uncertainty into convenient lies. They sample 
 This tool preserves uncertainty. It records what the OS admits exists, marks unknowns explicitly, and lets you reason about time as intervals, not fabricated points.
 
 It's designed to be boring, honest, and trustworthy.
+
+## Future: daemon-inspector Pro
+
+**Pro is additive, not required.**
+
+The free version remains fully functional indefinitely. Pro adds:
+
+- Narrative explanations derived from existing events
+- Human-readable summaries of daemon behavior
+- No changes to existing command semantics
+
+Pro never overrides Free behavior. Free remains fully scriptable and complete.
+
+Try the stub:
+```bash
+daemon-inspector explain com.apple.Finder
+```
+
+## Links
+
+- [Documentation](https://mikedan37.github.io/daemon-inspector1/)
+- [GitHub](https://github.com/Mikedan37/daemon-inspector1)
+- [Homebrew Tap](https://github.com/Mikedan37/homebrew-daemon-inspector)

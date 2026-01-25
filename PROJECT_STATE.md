@@ -355,12 +355,21 @@ Most tools answer one. This tool answers all three without lying.
 
 ## What's Next (Not v1.2)
 
-### Potential v1.3: Narrative Commands
-- `explain <label>` - Compose facts into sentences
-- `summary` - System-wide narrative
+### daemon-inspector Pro (Planned)
+
+Status: **Stub implemented, functionality pending**
+
+Pro features:
+- `explain <label>` - Narrative summaries derived from events
+- `summary` - System-wide behavioral synthesis
 - `unknowns` - Explain why unknowns exist
 
-### Potential v1.3: Cross-Cutting Views
+Business model:
+- Free remains complete and useful indefinitely
+- Pro is additive, not required
+- Pro never overrides Free behavior
+
+### Cross-Cutting Views
 - Combine filters with change detection
 - "Show me changed daemons that are not system binaries"
 
@@ -368,6 +377,14 @@ Most tools answer one. This tool answers all three without lying.
 - Linux systemd collector
 - Library extraction (not just CLI)
 - Trigger mechanism detection
+
+---
+
+## Distribution
+
+- **Homebrew**: Prebuilt binary, no source compilation
+- **GitHub Releases**: Binary artifacts
+- **BlazeDB**: Remains private, not exposed during install
 
 ---
 

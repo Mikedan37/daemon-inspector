@@ -1,0 +1,3 @@
+theme: jekyll-theme-minimal
+title: daemon-inspector
+description: "Read-only forensic inspection of background execution on macOS"
