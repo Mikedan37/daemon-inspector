@@ -58,22 +58,31 @@ public struct TableRenderer {
         }
         
         // Phase 4: Unknown field explanations (footnotes)
+        // Enhanced with "why" explanations for better DX
         let hasUnknownDomain = daemons.contains { $0.domain == "unknown" }
         let hasMissingBinary = daemons.contains { $0.binaryPath == nil }
         let hasMissingPID = daemons.contains { $0.pid == nil }
         
         if hasUnknownDomain || hasMissingBinary || hasMissingPID {
             lines.append("")
-            lines.append("Legend:")
+            lines.append("Why values may be unknown:")
             if hasMissingPID {
-                lines.append("  PID: -          = Not currently running")
+                lines.append("  PID: -")
+                lines.append("    Service is loaded but not currently running.")
+                lines.append("    This is normal for on-demand or triggered services.")
             }
             if hasMissingBinary {
-                lines.append("  Binary: -       = Not exposed by launchd")
+                lines.append("  Binary: -")
+                lines.append("    launchd does not expose binary path for this service.")
+                lines.append("    Common for XPC services, app-embedded agents, or system internals.")
             }
             if hasUnknownDomain {
-                lines.append("  Domain: unknown = No domain metadata available")
+                lines.append("  Domain: unknown")
+                lines.append("    Domain metadata not available from launchctl print.")
+                lines.append("    The service exists but its execution context is opaque.")
             }
+            lines.append("")
+            lines.append("Unknown is a valid state, not an error. It may resolve in future observations.")
         }
         
         return lines

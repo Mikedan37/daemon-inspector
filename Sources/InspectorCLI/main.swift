@@ -63,6 +63,37 @@ struct DaemonInspector {
         return "~/.daemon-inspector"
     }
     
+    /// Track if hints have been shown this session (no persistence)
+    private static var hintsShownThisSession = false
+    
+    /// Show guided usage hints for interactive first-time users
+    private static func showGuidedHint(afterCommand command: String) {
+        // Only show in TTY, only once per session, only on first run
+        guard !hintsShownThisSession, isFirstRun, TTYDetector.isInteractive else { return }
+        hintsShownThisSession = true
+        
+        print("")
+        print("Tip: Getting started with daemon-inspector")
+        
+        switch command {
+        case "list":
+            print("  - Run 'daemon-inspector list' again to capture another snapshot")
+            print("  - Then 'daemon-inspector diff' to see what changed")
+            print("  - Use --json for scripting")
+        case "diff":
+            print("  - Use 'daemon-inspector unstable' to find flapping services")
+            print("  - Use 'daemon-inspector timeline <label>' for forensic history")
+        case "sample":
+            print("  - After sampling, try 'daemon-inspector unstable' to find churn")
+            print("  - Use 'daemon-inspector timeline <label>' to investigate specific daemons")
+        default:
+            print("  - Use 'daemon-inspector list' to capture current state")
+            print("  - Use 'daemon-inspector diff' to see changes over time")
+            print("  - Use --help for all commands")
+        }
+        print("")
+    }
+    
     static func main() {
         let args = CommandLine.arguments
         
@@ -135,6 +166,9 @@ struct DaemonInspector {
             // Pro stub (v1.3)
             case "explain":
                 runExplainStub(args: options.remainingArgs)
+            // Help commands
+            case "why-unknown":
+                printWhyUnknown()
             // Internal commands
             case "test-derive":
                 EventDeriverTests.runDemo()
@@ -145,6 +179,10 @@ struct DaemonInspector {
                 printUsage()
                 exit(1)
             }
+            
+            // Show guided hints for first-time interactive users
+            showGuidedHint(afterCommand: command)
+            
         } catch let error as InspectorError {
             printError(error.message)
             exit(1)
@@ -175,6 +213,9 @@ struct DaemonInspector {
         print("")
         print("Pro (planned):")
         print("  explain <label>                   Narrative summary (Pro)")
+        print("")
+        print("Help commands:")
+        print("  why-unknown                       Explain why values may be unknown")
         print("")
         print("Change-first commands:")
         print("  changed                           Show all daemons with derived events")
@@ -227,26 +268,66 @@ struct DaemonInspector {
         print("Error: \(message)")
     }
     
-    /// Inspector-specific errors with plain language messages
+    /// Inspector-specific errors with plain language messages.
+    /// All errors provide: cause, context, and next step.
     enum InspectorError: Error {
         case noSnapshots
         case insufficientSnapshots(required: Int, found: Int)
         case daemonNotFound(label: String)
         case databaseError(String)
         case invalidTimeFilter(String)
+        case permissionDenied(path: String)
+        case binaryNotFound(path: String)
         
         var message: String {
             switch self {
             case .noSnapshots:
-                return "No snapshots available. Run 'daemon-inspector list' to create one."
+                return """
+                    No snapshots available yet.
+                    
+                    Next step: Run 'daemon-inspector list' to capture current daemon state.
+                    """
             case .insufficientSnapshots(let required, let found):
-                return "Need at least \(required) snapshots, found \(found). Run 'daemon-inspector list' to create more."
+                return """
+                    Need at least \(required) snapshots to compare, found \(found).
+                    
+                    Next step: Run 'daemon-inspector list' to capture another snapshot.
+                    """
             case .daemonNotFound(let label):
-                return "No observations found for '\(label)'."
+                return """
+                    No observations found for '\(label)'.
+                    
+                    This daemon may not exist, or may not have been observed yet.
+                    Try 'daemon-inspector list' to see currently visible daemons.
+                    """
             case .databaseError(let msg):
-                return "Database error: \(msg)"
+                return """
+                    Storage error: \(msg)
+                    
+                    The database may be locked or corrupted.
+                    Storage location: ~/.daemon-inspector/
+                    """
             case .invalidTimeFilter(let msg):
-                return "Invalid time filter: \(msg)"
+                return """
+                    Invalid time filter: \(msg)
+                    
+                    Valid formats: 30s, 5m, 2h, 1d
+                    Example: --since 30m
+                    """
+            case .permissionDenied(let path):
+                return """
+                    Permission denied: \(path)
+                    
+                    daemon-inspector cannot read this path.
+                    This is expected for some protected system binaries.
+                    """
+            case .binaryNotFound(let path):
+                return """
+                    Binary not found: \(path)
+                    
+                    The file may have been moved or deleted since observation.
+                    This can happen after updates or uninstalls.
+                    """
             }
         }
     }
@@ -701,6 +782,13 @@ struct DaemonInspector {
     
     // MARK: - JSON Output (Phase 3 + Phase 7)
     
+    /// Print JSON with version metadata.
+    ///
+    /// OUTPUT CONTRACT (see docs/OUTPUT_CONTRACTS.md):
+    /// - All JSON includes _meta.toolVersion and _meta.schemaVersion
+    /// - schemaVersion increments on breaking changes
+    /// - New fields may be added without version bump
+    /// - Existing fields will not be removed or change type
     private static func printJSON(_ dict: [String: Any]) {
         // Add version metadata to all JSON outputs (Phase 7: Scriptability)
         var output = dict
@@ -1555,14 +1643,80 @@ struct DaemonInspector {
         }
     }
     
+    // MARK: - Why Unknown Helper
+    
+    private static func printWhyUnknown() {
+        print("Why values may be unknown in daemon-inspector")
+        print(String(repeating: "=", count: 50))
+        print("")
+        print("PID: - (nil)")
+        print("  The service is loaded but not currently running.")
+        print("  This is normal for:")
+        print("    - On-demand services (activated by socket, timer, or event)")
+        print("    - Crashed services awaiting restart")
+        print("    - Services with KeepAlive = false")
+        print("  This is not an error. The service may run later.")
+        print("")
+        print("Binary Path: - (nil)")
+        print("  launchd does not expose the binary path for this service.")
+        print("  Common reasons:")
+        print("    - XPC services (bundled within apps)")
+        print("    - App-embedded launch agents")
+        print("    - System internals with private configurations")
+        print("    - Services defined inline rather than via plist")
+        print("  Use 'inspect binary <label>' to investigate if a path becomes available.")
+        print("")
+        print("Domain: unknown")
+        print("  The execution domain could not be determined from launchctl print.")
+        print("  Possible reasons:")
+        print("    - Service visible in 'launchctl list' but not in 'launchctl print'")
+        print("    - Cross-domain services")
+        print("    - Transient or ephemeral jobs")
+        print("  The service exists; its context is simply opaque to observation.")
+        print("")
+        print("Time Windows (not exact timestamps)")
+        print("  Events are derived by comparing snapshots.")
+        print("  We can only say 'something changed between T1 and T2'.")
+        print("  Exact timestamps would be fabricated.")
+        print("  Wider snapshot gaps produce wider time windows.")
+        print("")
+        print("Unknown is a valid, stable state.")
+        print("It may resolve in future observations.")
+        print("Do not assume unknown means broken.")
+        exit(0)
+    }
+    
     // MARK: - Pro Stub (v1.3)
     
+    /// Pro activation UX: Clear distinction between Free and Pro.
+    /// - Pro is additive, never degrades Free functionality
+    /// - No nagging, no DRM, just information
+    /// - Pro feels like a private agreement, not enforcement
     private static func runExplainStub(args: [String]) {
-        print("This command is part of daemon-inspector Pro.")
-        print("It provides narrative summaries derived from existing events.")
-        print("No system state is modified.")
+        print("daemon-inspector explain")
+        print(String(repeating: "=", count: 30))
         print("")
-        print("Learn more at: https://mikedan37.github.io/daemon-inspector1/")
+        print("This command is part of daemon-inspector Pro.")
+        print("")
+        print("What it does:")
+        print("  Provides human-readable narrative summaries")
+        print("  derived from your existing snapshots and events.")
+        print("  No additional data collection. No system modification.")
+        print("")
+        print("What you have now (Free):")
+        print("  - All observation, storage, and derivation features")
+        print("  - Binary inspection")
+        print("  - JSON output for scripting")
+        print("  - Full event derivation")
+        print("")
+        print("What Pro adds:")
+        print("  - Narrative explanations of daemon behavior")
+        print("  - Plain-language summaries")
+        print("  - No changes to Free functionality")
+        print("")
+        print("Free remains complete and useful indefinitely.")
+        print("")
+        print("Learn more: https://mikedan37.github.io/daemon-inspector/")
         exit(0)
     }
     
