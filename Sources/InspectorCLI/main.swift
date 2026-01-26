@@ -163,9 +163,16 @@ struct DaemonInspector {
             // Binary inspection (v1.2)
             case "inspect":
                 try runInspect(args: options.remainingArgs, options: options)
-            // Pro stub (v1.3)
+            // Pro commands (gated)
             case "explain":
-                runExplainStub(args: options.remainingArgs)
+                runExplain(args: options.remainingArgs, options: options)
+            // License management
+            case "upgrade":
+                runUpgrade()
+            case "activate":
+                runActivate(args: options.remainingArgs)
+            case "license":
+                runLicenseStatus()
             // Help commands
             case "why-unknown":
                 printWhyUnknown()
@@ -211,8 +218,13 @@ struct DaemonInspector {
         print("Binary inspection (read-only):")
         print("  inspect binary <label>            Inspect binary metadata")
         print("")
-        print("Pro (planned):")
-        print("  explain <label>                   Narrative summary (Pro)")
+        print("Pro commands:")
+        print("  explain <label>                   Narrative summary (requires Pro)")
+        print("")
+        print("License management:")
+        print("  upgrade                           Learn about Pro and open payment")
+        print("  activate <key>                    Activate Pro with license key")
+        print("  license                           Show current license status")
         print("")
         print("Help commands:")
         print("  why-unknown                       Explain why values may be unknown")
@@ -1686,37 +1698,94 @@ struct DaemonInspector {
         exit(0)
     }
     
-    // MARK: - Pro Stub (v1.3)
+    // MARK: - Pro Commands (Gated)
     
-    /// Pro activation UX: Clear distinction between Free and Pro.
-    /// - Pro is additive, never degrades Free functionality
-    /// - No nagging, no DRM, just information
-    /// - Pro feels like a private agreement, not enforcement
-    private static func runExplainStub(args: [String]) {
-        print("daemon-inspector explain")
-        print(String(repeating: "=", count: 30))
+    /// Pro command: explain daemon behavior narratively
+    /// Gated behind license check
+    private static func runExplain(args: [String], options: CommandOptions) {
+        // Check Pro license
+        guard License.requirePro(feature: "Narrative explanations") else {
+            exit(0)  // Clean exit after showing upgrade info
+        }
+        
+        // Pro functionality would go here
+        // For now, placeholder since this is the stub
+        guard !args.isEmpty else {
+            printError("Usage: daemon-inspector explain <label>")
+            exit(1)
+        }
+        
+        let label = args[0]
+        print("daemon-inspector explain: \(label)")
+        print(String(repeating: "=", count: 40))
         print("")
-        print("This command is part of daemon-inspector Pro.")
+        print("Pro feature: Generating narrative summary...")
         print("")
-        print("What it does:")
-        print("  Provides human-readable narrative summaries")
-        print("  derived from your existing snapshots and events.")
-        print("  No additional data collection. No system modification.")
+        print("(Full implementation coming in v1.4)")
+        exit(0)
+    }
+    
+    // MARK: - License Management Commands
+    
+    /// Show upgrade information and open payment link
+    private static func runUpgrade() {
+        if License.isPro {
+            print("You already have daemon-inspector Pro.")
+            print("")
+            print("Thank you for your support!")
+            exit(0)
+        }
+        
+        // requirePro will print info and open browser
+        License.requirePro(feature: "daemon-inspector Pro", openBrowser: true)
+        exit(0)
+    }
+    
+    /// Activate Pro with license key
+    private static func runActivate(args: [String]) {
+        guard !args.isEmpty else {
+            printError("Usage: daemon-inspector activate <license-key>")
+            print("")
+            print("Get your license key after purchase:")
+            print(License.stripeURL)
+            exit(1)
+        }
+        
+        let key = args[0]
+        
+        switch License.activate(key: key) {
+        case .success:
+            print("License activated successfully!")
+            print("")
+            print("daemon-inspector Pro is now enabled.")
+            print("Thank you for your support.")
+            exit(0)
+        case .invalid(let reason):
+            printError("License activation failed: \(reason)")
+            print("")
+            print("Need help? Contact support.")
+            exit(1)
+        }
+    }
+    
+    /// Show current license status
+    private static func runLicenseStatus() {
+        print("daemon-inspector license status")
+        print(String(repeating: "=", count: 35))
         print("")
-        print("What you have now (Free):")
-        print("  - All observation, storage, and derivation features")
-        print("  - Binary inspection")
-        print("  - JSON output for scripting")
-        print("  - Full event derivation")
-        print("")
-        print("What Pro adds:")
-        print("  - Narrative explanations of daemon behavior")
-        print("  - Plain-language summaries")
-        print("  - No changes to Free functionality")
-        print("")
-        print("Free remains complete and useful indefinitely.")
-        print("")
-        print("Learn more: https://mikedan37.github.io/daemon-inspector/")
+        
+        if License.isPro {
+            print("Tier: Pro")
+            print("Status: Active")
+        } else {
+            print("Tier: Free")
+            print("Status: Active")
+            print("")
+            print("Free includes all core features.")
+            print("Upgrade to Pro for narrative explanations.")
+            print("")
+            print("Run 'daemon-inspector upgrade' to learn more.")
+        }
         exit(0)
     }
     
@@ -2162,5 +2231,135 @@ struct DaemonInspector {
         print("")
         let allPassed = orderValid && noDuplicates && deterministicResult
         print("Overall: \(allPassed ? "PASS" : "FAIL")")
+    }
+}
+
+// MARK: - License Management
+
+/// License management for daemon-inspector Pro
+/// Design: Free is complete, Pro is additive, no DRM, no nagging
+struct License {
+    
+    /// Stripe payment link for Pro upgrade
+    static let stripeURL = "https://buy.stripe.com/test_YOUR_LINK_HERE"
+    
+    /// License file location
+    private static var licensePath: URL {
+        let baseDir: URL
+        if let envPath = ProcessInfo.processInfo.environment["DAEMON_INSPECTOR_DB_PATH"] {
+            baseDir = URL(fileURLWithPath: envPath, isDirectory: true)
+        } else {
+            baseDir = FileManager.default
+                .homeDirectoryForCurrentUser
+                .appendingPathComponent(".daemon-inspector", isDirectory: true)
+        }
+        return baseDir.appendingPathComponent("license.json")
+    }
+    
+    /// Check if Pro license is active
+    static var isPro: Bool {
+        guard let license = loadLicense() else { return false }
+        return license.isValid
+    }
+    
+    private static func loadLicense() -> LicenseFile? {
+        guard FileManager.default.fileExists(atPath: licensePath.path) else {
+            return nil
+        }
+        do {
+            let data = try Data(contentsOf: licensePath)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode(LicenseFile.self, from: data)
+        } catch {
+            return nil
+        }
+    }
+    
+    static func saveLicense(key: String) throws {
+        let license = LicenseFile(key: key, activatedAt: Date(), tier: "pro")
+        let baseDir = licensePath.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: baseDir, withIntermediateDirectories: true)
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(license)
+        try data.write(to: licensePath, options: .atomic)
+    }
+    
+    @discardableResult
+    static func requirePro(feature: String, openBrowser: Bool = true) -> Bool {
+        if isPro { return true }
+        printProRequired(feature: feature, openBrowser: openBrowser)
+        return false
+    }
+    
+    private static func printProRequired(feature: String, openBrowser: Bool) {
+        print("")
+        print("This feature requires daemon-inspector Pro.")
+        print("")
+        print("Feature: \(feature)")
+        print("")
+        print("What you have now (Free):")
+        print("  - All observation, storage, and derivation features")
+        print("  - Binary inspection")
+        print("  - JSON output for scripting")
+        print("  - Full event derivation")
+        print("")
+        print("What Pro adds:")
+        print("  - Narrative explanations of daemon behavior")
+        print("  - Plain-language summaries")
+        print("  - Priority support")
+        print("")
+        print("Free remains complete and useful indefinitely.")
+        print("")
+        print("Upgrade here:")
+        print(stripeURL)
+        print("")
+        print("Already have a license? Run:")
+        print("  daemon-inspector activate <license-key>")
+        print("")
+        
+        if openBrowser && TTYDetector.isInteractive {
+            openInBrowser(stripeURL)
+        }
+    }
+    
+    private static func openInBrowser(_ urlString: String) {
+        #if os(macOS)
+        guard URL(string: urlString) != nil else { return }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = [urlString]
+        try? process.run()
+        #endif
+    }
+    
+    static func activate(key: String) -> ActivationResult {
+        guard key.count >= 8 else {
+            return .invalid("License key too short")
+        }
+        do {
+            try saveLicense(key: key)
+            return .success
+        } catch {
+            return .invalid("Failed to save license: \(error.localizedDescription)")
+        }
+    }
+    
+    enum ActivationResult {
+        case success
+        case invalid(String)
+    }
+}
+
+private struct LicenseFile: Codable {
+    let key: String
+    let activatedAt: Date
+    let tier: String
+    
+    var isValid: Bool {
+        return !key.isEmpty && tier == "pro"
     }
 }
