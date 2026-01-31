@@ -37,8 +37,8 @@ brew install --build-from-source Formula/daemon-inspector.rb
 ### Build from Source
 
 ```bash
-git clone https://github.com/Mikedan37/daemon-background-task-introspection.git
-cd daemon-background-task-introspection
+git clone https://github.com/Mikedan37/daemon-inspector1.git
+cd daemon-inspector1
 swift build -c release
 
 # Create symlink
@@ -52,7 +52,7 @@ Add to your `Package.swift`:
 ```swift
 dependencies: [
     .package(
-        url: "https://github.com/Mikedan37/daemon-background-task-introspection.git",
+        url: "https://github.com/Mikedan37/daemon-inspector1.git",
         from: "1.2.0"
     )
 ]
@@ -117,6 +117,8 @@ daemon-inspector unstable
 ```
 
 Shows daemons sorted by "churn" - how many times they started, stopped, or changed PID.
+
+**Note:** "Unstable" here means frequently changing state, not broken, malicious, or misconfigured.
 
 ### Inspect a Binary (v1.2)
 
@@ -185,7 +187,7 @@ When piped or with `--json`, pager is disabled automatically.
 
 ## Storage
 
-Snapshots are stored in `~/.daemon-inspector/` using BlazeDB (append-only, encrypted).
+Snapshots are stored in `~/.daemon-inspector/` using BlazeDB (append-only, encrypted local store).
 
 - Snapshots survive restarts and reboots
 - History cannot be rewritten
@@ -196,7 +198,7 @@ Override location with `DAEMON_INSPECTOR_DB_PATH` environment variable.
 ## Design Principles
 
 1. **Read-only**: Never modifies system state
-2. **Honest**: Unknown stays unknown, time windows not fabricated timestamps
+2. **Honest**: Unknown stays unknown, time represented as intervals not fabricated point-in-time certainty
 3. **Append-only**: History cannot be rewritten
 4. **No invented meaning**: Events are derived, not guessed
 5. **Local-only**: No network, no telemetry
