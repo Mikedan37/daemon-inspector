@@ -1,0 +1,37 @@
+# Build artifacts (generated, not intent)
+.build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+
+# Release outputs (snapshots, not source)
+release-artifacts/
+
+# Vendored dependencies (1000+ files of noise)
+# Cursor should reason about YOUR code, not BlazeDB internals
+Vendor/
+
+# Package resolution (mechanical state, not design)
+Package.resolved
+.swiftpm/
+
+# Cursor's own rules (don't index yourself)
+.cursor/
+
+# GitHub Pages build output
+docs/_site/
+docs/.jekyll-cache/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*~
+
+# macOS junk
+.DS_Store
+.Spotlight-V100
+.Trashes
+
+# Test artifacts
+*.xcresult
