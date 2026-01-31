@@ -37,8 +37,8 @@ brew install --build-from-source Formula/daemon-inspector.rb
 ### Build from Source
 
 ```bash
-git clone https://github.com/Mikedan37/daemon-inspector1.git
-cd daemon-inspector1
+git clone https://github.com/Mikedan37/daemon-inspector.git
+cd daemon-inspector
 swift build -c release
 
 # Create symlink
@@ -52,7 +52,7 @@ Add to your `Package.swift`:
 ```swift
 dependencies: [
     .package(
-        url: "https://github.com/Mikedan37/daemon-inspector1.git",
+        url: "https://github.com/Mikedan37/daemon-inspector.git",
         from: "1.2.0"
     )
 ]
@@ -270,7 +270,7 @@ The goal is to produce durable, low-level tools that prioritize correctness, tra
 ## Links
 
 - [Documentation](https://mikedan37.github.io/daemon-inspector/)
-- [GitHub](https://github.com/Mikedan37/daemon-inspector1)
+- [GitHub](https://github.com/Mikedan37/daemon-inspector)
 - [Homebrew Tap](https://github.com/Mikedan37/homebrew-daemon-inspector)
 
 ---

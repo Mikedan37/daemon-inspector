@@ -58,8 +58,8 @@ brew install daemon-inspector
 Or build from source:
 
 ```bash
-git clone https://github.com/Mikedan37/daemon-inspector1.git
-cd daemon-inspector1
+git clone https://github.com/Mikedan37/daemon-inspector.git
+cd daemon-inspector
 swift build -c release
 ```
 
@@ -132,7 +132,7 @@ Danylchuk Studios focuses on building low-level, developer-first tools for syste
 
 ## Source
 
-[GitHub: Mikedan37/daemon-inspector1](https://github.com/Mikedan37/daemon-inspector1)
+[GitHub: Mikedan37/daemon-inspector](https://github.com/Mikedan37/daemon-inspector)
 
 Developed and maintained by Danylchuk Studios LLC (Michael Danylchuk).
 
