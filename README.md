@@ -259,7 +259,9 @@ daemon-inspector explain com.apple.Finder
 
 ## Project Stewardship
 
-This project is developed and maintained by **Danylchuk Studios LLC**.
+This project is developed and maintained by **Danylchuk Studios LLC**. 
+
+It is used to inspect long-running and daemonized processes on macOS, including background components of AI agents and other persistent services.
 
 The goal is to produce durable, low-level tools that prioritize correctness, transparency, and developer trust over dashboards or automation.
 
